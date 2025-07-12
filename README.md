@@ -7,7 +7,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # YaCy Ansible role
 
-This is an [Ansible](https://www.ansible.com/) role which installs [YaCy](https://github.com/httpjamesm/YaCy) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [YaCy](https://yacy.net) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
 This role *implicitly* depends on:
 

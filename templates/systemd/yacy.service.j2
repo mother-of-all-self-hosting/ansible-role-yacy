@@ -29,13 +29,18 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --log-driver=none \
       --user={{ yacy_uid }}:{{ yacy_gid }} \
       --cap-drop=ALL \
-      --read-only \
       --network={{ yacy_container_network }} \
       {% if yacy_container_http_host_bind_port %}
       -p {{ yacy_container_http_host_bind_port }}:{{ yacy_container_http_port }} \
       {% endif %}
+      {% if yacy_container_https_host_bind_port %}
+      -p {{ yacy_container_https_host_bind_port }}:{{ yacy_container_https_port }} \
+      {% endif %}
       --env-file={{ yacy_base_path }}/env \
       --label-file={{ yacy_base_path }}/labels \
+      {% for volume in yacy_container_additional_volumes %}
+      --mount type={{ volume.type | default('bind' if '/' in volume.src else 'volume') }},src={{ volume.src }},dst={{ volume.dst }}{{ (',' + volume.options) if volume.options else '' }} \
+      {% endfor %}
       {% for arg in yacy_container_extra_arguments %}
       {{ arg }} \
       {% endfor %}

@@ -7,20 +7,18 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Project source code URL: https://github.com/httpjamesm/YaCy
+# Project source code URL: https://github.com/yacy/yacy_search_server
 
 yacy_enabled: true
 
 yacy_identifier: yacy
 yacy_base_path: "/{{ yacy_identifier }}"
 
-# Only "release" tag is available
-yacy_version: release
+yacy_version: latest-alpine
 
 yacy_uid: ''
 yacy_gid: ''
 
-# Specify URI scheme for yacy_base_url.
 yacy_scheme: https
 
 # The hostname at which YaCy is served.
@@ -28,38 +26,41 @@ yacy_hostname: ''
 
 # The path at which YaCy is exposed.
 # This value must either be `/` or not end with a slash (e.g. `/yacy`).
-#
-# Hosting YaCy under a subpath does not seem to be possible due to YaCy's
-# technical limitations.
 yacy_path_prefix: /
 
-# Public facing base URL of the YaCy service.
-# It should not end with a slash.
-yacy_base_url: "{{ yacy_scheme }}://{{ yacy_hostname }}{{ '' if yacy_path_prefix == '/' else yacy_path_prefix }}"
-
-yacy_container_image: "{{ yacy_container_image_registry_prefix }}httpjamesm/yacy:{{ yacy_container_image_tag }}"
+yacy_container_image: "{{ yacy_container_image_registry_prefix }}yacy/yacy_search_server:{{ yacy_container_image_tag }}"
 yacy_container_image_tag: "{{ yacy_version }}"
 yacy_container_image_registry_prefix: "{{ yacy_container_image_registry_prefix_upstream }}"
 yacy_container_image_registry_prefix_upstream: "{{ yacy_container_image_registry_prefix_upstream_default }}"
-yacy_container_image_registry_prefix_upstream_default: ghcr.io/
+yacy_container_image_registry_prefix_upstream_default: docker.io/
 yacy_container_image_force_pull: "{{ yacy_container_image.endswith(':latest') }}"
 
 yacy_container_image_self_build: false
-yacy_container_image_self_build_name: "httpjamesm/yacy:{{ yacy_container_image_self_build_repo_version }}"
-yacy_container_image_self_build_repo: "https://github.com/httpjamesm/YaCy.git"
-yacy_container_image_self_build_repo_version: "{{ yacy_version if yacy_version != 'latest' else 'main' }}"
+yacy_container_image_self_build_name: "yacy/yacy_search_server:{{ yacy_container_image_self_build_repo_version }}"
+yacy_container_image_self_build_repo: "https://github.com/yacy/yacy_search_server.git"
+yacy_container_image_self_build_repo_version: "master"
 yacy_container_image_self_build_src_files_path: "{{ yacy_base_path }}/docker-src"
+yacy_container_image_self_build_repo_dockerfile_dir: "{{ yacy_container_image_self_build_src_files_path }}/docker"
+yacy_container_image_self_build_repo_dockerfile: "Dockerfile.alpine"
 
-# Controls whether the container exposes its HTTP port (tcp/8080 in the container).
+# Controls whether the container exposes its HTTP port (tcp/8090 in the container).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
-yacy_container_http_host_bind_port: ''
+yacy_container_http_host_bind_port: 8090
+
+# Controls whether the container exposes its HTTP port (tcp/8443 in the container).
+#
+# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
+yacy_container_https_host_bind_port: 8443
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 yacy_container_network: "{{ yacy_identifier }}"
 
 # The port number in the container
-yacy_container_http_port: 8080
+yacy_container_http_port: 8090
+
+# The port number in the container
+yacy_container_https_port: 8443
 
 # A list of additional container networks that the container would be connected to.
 # The role does not create these networks, so make sure they already exist.
@@ -171,9 +172,6 @@ yacy_systemd_required_services_list_custom: []
 
 # List of systemd services that the YaCy systemd service wants
 yacy_systemd_wanted_services_list: []
-
-yacy_environment_variable_app_url: "{{ yacy_base_url }}"
-yacy_environment_variable_jwt_signing_secret: 'secret'
 
 # Additional environment variables.
 yacy_environment_variables_additional_variables: ''
