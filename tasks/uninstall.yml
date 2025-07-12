@@ -6,28 +6,28 @@
 ---
 - name: Check existence of YaCy systemd service
   ansible.builtin.stat:
-    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ anonymousoverflow_identifier }}.service"
-  register: anonymousoverflow_service_stat
+    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ yacy_identifier }}.service"
+  register: yacy_service_stat
 
 - name: Uninstall YaCy systemd services and files
-  when: anonymousoverflow_service_stat.stat.exists | bool
+  when: yacy_service_stat.stat.exists | bool
   block:
     - name: Ensure YaCy systemd service is stopped
       ansible.builtin.service:
-        name: "{{ anonymousoverflow_identifier }}"
+        name: "{{ yacy_identifier }}"
         state: stopped
         enabled: false
         daemon_reload: true
 
     - name: Ensure YaCy systemd service does not exist
       ansible.builtin.file:
-        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ anonymousoverflow_identifier }}.service"
+        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ yacy_identifier }}.service"
         state: absent
 
     - name: Ensure YaCy container network does not exist via community.docker.docker_network
       when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
       community.docker.docker_network:
-        name: "{{ anonymousoverflow_container_network }}"
+        name: "{{ yacy_container_network }}"
         state: absent
 
     - name: Ensure YaCy container network does not exist via ansible.builtin.command
@@ -35,11 +35,11 @@
       ansible.builtin.command:
         cmd: >-
           {{ devture_systemd_docker_base_host_command_docker }} network rm
-          {{ anonymousoverflow_container_network }}
+          {{ yacy_container_network }}
       register: network_deletion_result
-      changed_when: anonymousoverflow_container_network in network_deletion_result.stdout
+      changed_when: yacy_container_network in network_deletion_result.stdout
 
     - name: Ensure YaCy path does not exist
       ansible.builtin.file:
-        path: "{{ anonymousoverflow_base_path }}"
+        path: "{{ yacy_base_path }}"
         state: absent

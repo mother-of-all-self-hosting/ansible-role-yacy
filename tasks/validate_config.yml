@@ -10,14 +10,14 @@
       You need to define a required configuration setting (`{{ item }}`).
   when: "vars[item] == ''"
   with_items:
-    - anonymousoverflow_uid
-    - anonymousoverflow_gid
-    - anonymousoverflow_hostname
-    - anonymousoverflow_path_prefix
-    - anonymousoverflow_container_network
+    - yacy_uid
+    - yacy_gid
+    - yacy_hostname
+    - yacy_path_prefix
+    - yacy_container_network
 
 - name: Run if Traefik is enabled
-  when: anonymousoverflow_container_labels_traefik_enabled | bool
+  when: yacy_container_labels_traefik_enabled | bool
   block:
     - name: Fail if required YaCy Traefik settings not defined
       ansible.builtin.fail:
@@ -25,14 +25,14 @@
           You need to define a required configuration setting (`{{ item }}`).
       when: "vars[item] == ''"
       with_items:
-        - anonymousoverflow_container_labels_traefik_hostname
-        - anonymousoverflow_container_labels_traefik_path_prefix
+        - yacy_container_labels_traefik_hostname
+        - yacy_container_labels_traefik_path_prefix
 
     # We ensure it doesn't end with a slash, because we handle both (slash and no-slash).
-    # Knowing that `anonymousoverflow_container_labels_traefik_path_prefix` does not end with a slash
+    # Knowing that `yacy_container_labels_traefik_path_prefix` does not end with a slash
     # ensures we know how to set these routes up without having to do "does it end with a slash" checks elsewhere.
-    - name: Fail if anonymousoverflow_container_labels_traefik_path_prefix ends with a slash
+    - name: Fail if yacy_container_labels_traefik_path_prefix ends with a slash
       ansible.builtin.fail:
         msg: >-
-          anonymousoverflow_container_labels_traefik_path_prefix (`{{ anonymousoverflow_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/anonymousoverflow`).
-      when: "anonymousoverflow_container_labels_traefik_path_prefix != '/' and anonymousoverflow_container_labels_traefik_path_prefix[-1] == '/'"
+          yacy_container_labels_traefik_path_prefix (`{{ yacy_container_labels_traefik_path_prefix }}`) must either be `/` or not end with a slash (e.g. `/yacy`).
+      when: "yacy_container_labels_traefik_path_prefix != '/' and yacy_container_labels_traefik_path_prefix[-1] == '/'"

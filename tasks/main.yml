@@ -5,12 +5,12 @@
 
 ---
 - name: Perform YaCy installation tasks
-  when: anonymousoverflow_enabled | bool
+  when: yacy_enabled | bool
   tags:
     - setup-all
-    - setup-anonymousoverflow
+    - setup-yacy
     - install-all
-    - install-anonymousoverflow
+    - install-yacy
   block:
     - name: Validate YaCy configuration
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
@@ -18,10 +18,10 @@
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
 - name: Perform YaCy uninstallation tasks
-  when: not anonymousoverflow_enabled | bool
+  when: not yacy_enabled | bool
   tags:
     - setup-all
-    - setup-anonymousoverflow
+    - setup-yacy
   block:
     - name: Uninstall YaCy
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
