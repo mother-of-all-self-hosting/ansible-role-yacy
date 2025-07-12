@@ -4,7 +4,7 @@ galaxy_info:
   company: progressiv
   role_name: anonymousoverflow
   namespace: progressiv
-  description: AnonymousOverflow
+  description: YaCy
   platforms:
     - name: Debian
       versions:

@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Fail if required AnonymousOverflow settings not defined
+- name: Fail if required YaCy settings not defined
   ansible.builtin.fail:
     msg: >-
       You need to define a required configuration setting (`{{ item }}`).
@@ -19,7 +19,7 @@
 - name: Run if Traefik is enabled
   when: anonymousoverflow_container_labels_traefik_enabled | bool
   block:
-    - name: Fail if required AnonymousOverflow Traefik settings not defined
+    - name: Fail if required YaCy Traefik settings not defined
       ansible.builtin.fail:
         msg: >-
           You need to define a required configuration setting (`{{ item }}`).

@@ -7,7 +7,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-# Project source code URL: https://github.com/httpjamesm/AnonymousOverflow
+# Project source code URL: https://github.com/httpjamesm/YaCy
 
 anonymousoverflow_enabled: true
 
@@ -23,17 +23,17 @@ anonymousoverflow_gid: ''
 # Specify URI scheme for anonymousoverflow_base_url.
 anonymousoverflow_scheme: https
 
-# The hostname at which AnonymousOverflow is served.
+# The hostname at which YaCy is served.
 anonymousoverflow_hostname: ''
 
-# The path at which AnonymousOverflow is exposed.
+# The path at which YaCy is exposed.
 # This value must either be `/` or not end with a slash (e.g. `/anonymousoverflow`).
 #
-# Hosting AnonymousOverflow under a subpath does not seem to be possible due to AnonymousOverflow's
+# Hosting YaCy under a subpath does not seem to be possible due to YaCy's
 # technical limitations.
 anonymousoverflow_path_prefix: /
 
-# Public facing base URL of the AnonymousOverflow service.
+# Public facing base URL of the YaCy service.
 # It should not end with a slash.
 anonymousoverflow_base_url: "{{ anonymousoverflow_scheme }}://{{ anonymousoverflow_hostname }}{{ '' if anonymousoverflow_path_prefix == '/' else anonymousoverflow_path_prefix }}"
 
@@ -46,7 +46,7 @@ anonymousoverflow_container_image_force_pull: "{{ anonymousoverflow_container_im
 
 anonymousoverflow_container_image_self_build: false
 anonymousoverflow_container_image_self_build_name: "httpjamesm/anonymousoverflow:{{ anonymousoverflow_container_image_self_build_repo_version }}"
-anonymousoverflow_container_image_self_build_repo: "https://github.com/httpjamesm/AnonymousOverflow.git"
+anonymousoverflow_container_image_self_build_repo: "https://github.com/httpjamesm/YaCy.git"
 anonymousoverflow_container_image_self_build_repo_version: "{{ anonymousoverflow_version if anonymousoverflow_version != 'latest' else 'main' }}"
 anonymousoverflow_container_image_self_build_src_files_path: "{{ anonymousoverflow_base_path }}/docker-src"
 
@@ -163,13 +163,13 @@ anonymousoverflow_floc_optout_enabled: true
 # See: `anonymousoverflow_http_header_strict_transport_security`
 anonymousoverflow_hsts_preload_enabled: false
 
-# List of systemd services that the AnonymousOverflow systemd service depends on
+# List of systemd services that the YaCy systemd service depends on
 anonymousoverflow_systemd_required_services_list: "{{ anonymousoverflow_systemd_required_services_list_default + anonymousoverflow_systemd_required_services_list_auto + anonymousoverflow_systemd_required_services_list_custom }}"
 anonymousoverflow_systemd_required_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
 anonymousoverflow_systemd_required_services_list_auto: []
 anonymousoverflow_systemd_required_services_list_custom: []
 
-# List of systemd services that the AnonymousOverflow systemd service wants
+# List of systemd services that the YaCy systemd service wants
 anonymousoverflow_systemd_wanted_services_list: []
 
 anonymousoverflow_environment_variable_app_url: "{{ anonymousoverflow_base_url }}"

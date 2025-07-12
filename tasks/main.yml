@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Perform AnonymousOverflow installation tasks
+- name: Perform YaCy installation tasks
   when: anonymousoverflow_enabled | bool
   tags:
     - setup-all
@@ -12,16 +12,16 @@
     - install-all
     - install-anonymousoverflow
   block:
-    - name: Validate AnonymousOverflow configuration
+    - name: Validate YaCy configuration
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
-    - name: Install AnonymousOverflow
+    - name: Install YaCy
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
-- name: Perform AnonymousOverflow uninstallation tasks
+- name: Perform YaCy uninstallation tasks
   when: not anonymousoverflow_enabled | bool
   tags:
     - setup-all
     - setup-anonymousoverflow
   block:
-    - name: Uninstall AnonymousOverflow
+    - name: Uninstall YaCy
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
