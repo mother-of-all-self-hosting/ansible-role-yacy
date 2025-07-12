@@ -1,0 +1,52 @@
+{#
+SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+SPDX-FileCopyrightText: 2025 Suguru Hirahara
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+#}
+
+{% if anonymousoverflow_container_labels_traefik_enabled %}
+traefik.enable=true
+
+{% if anonymousoverflow_container_labels_traefik_docker_network %}
+traefik.docker.network={{ anonymousoverflow_container_labels_traefik_docker_network }}
+{% endif %}
+
+{% set middlewares = [] %}
+
+{% if anonymousoverflow_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ anonymousoverflow_identifier }}-slashless-redirect.redirectregex.regex=({{ anonymousoverflow_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ anonymousoverflow_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
+{% set middlewares = middlewares + [anonymousoverflow_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{% if anonymousoverflow_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ anonymousoverflow_identifier }}-strip-prefix.stripprefix.prefixes={{ anonymousoverflow_container_labels_traefik_path_prefix }}
+{% set middlewares = middlewares + [anonymousoverflow_identifier + '-strip-prefix'] %}
+{% endif %}
+
+{% if anonymousoverflow_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in anonymousoverflow_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ anonymousoverflow_identifier }}-add-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [anonymousoverflow_identifier + '-add-headers'] %}
+{% endif %}
+
+traefik.http.routers.{{ anonymousoverflow_identifier }}.rule={{ anonymousoverflow_container_labels_traefik_rule }}
+{% if anonymousoverflow_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ anonymousoverflow_identifier }}.priority={{ anonymousoverflow_container_labels_traefik_priority }}
+{% endif %}
+traefik.http.routers.{{ anonymousoverflow_identifier }}.service={{ anonymousoverflow_identifier }}
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ anonymousoverflow_identifier }}.middlewares={{ middlewares | join(',') }}
+{% endif %}
+traefik.http.routers.{{ anonymousoverflow_identifier }}.entrypoints={{ anonymousoverflow_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ anonymousoverflow_identifier }}.tls={{ anonymousoverflow_container_labels_traefik_tls | to_json }}
+{% if anonymousoverflow_container_labels_traefik_tls %}
+traefik.http.routers.{{ anonymousoverflow_identifier }}.tls.certResolver={{ anonymousoverflow_container_labels_traefik_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ anonymousoverflow_identifier }}.loadbalancer.server.port={{ anonymousoverflow_container_http_port }}
+{% endif %}
+
+{{ anonymousoverflow_container_labels_additional_labels }}
