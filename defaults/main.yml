@@ -13,6 +13,7 @@ yacy_enabled: true
 
 yacy_identifier: yacy
 yacy_base_path: "/{{ yacy_identifier }}"
+yacy_data_path: "{{ yacy_base_path }}/data"
 
 yacy_version: latest-alpine
 

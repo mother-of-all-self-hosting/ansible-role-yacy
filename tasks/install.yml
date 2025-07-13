@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Ensure YaCy path exists
+- name: Ensure YaCy paths exist
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -13,6 +13,7 @@
     group: "{{ yacy_gid }}"
   with_items:
     - "{{ yacy_base_path }}"
+    - "{{ yacy_data_path }}"
 
 - name: Ensure YaCy support files installed
   ansible.builtin.template:
