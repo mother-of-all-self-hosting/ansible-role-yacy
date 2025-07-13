@@ -20,11 +20,26 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 This is an [Ansible](https://www.ansible.com/) role which installs [YaCy](https://yacy.net) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-YaCy allows you to view StackOverflow threads without exposing your IP address, browsing habits, and other browser fingerprinting data to the website.
+YaCy is a distributed web search engine, based on a peer-to-peer network. It provides three different modes;
 
-See the project's [documentation](https://yacy.net/blob/main/README.md) to learn what YaCy does and why it might be useful to you.
+- Searching a shared global index on the P2P network
+- Crawling web pages of domains you choose to create an individual index for searching
+- Setting up a search portal for your intranet behind the firewall to search pages or files on the shared file system, without sharing data with a third party
 
-[<img src="assets/home_dark.webp" title="Home screen in dark mode" width="600" alt="Home screen in dark mode">](assets/home_dark.webp) [<img src="assets/question_dark.webp" title="Question in dark mode" width="600" alt="Question in dark mode">](assets/question_dark.webp) [<img src="assets/answers_light.webp" title="Answer in light mode" width="600" alt="Answer in light mode">](assets/answers_light.webp)
+See the project's [documentation](https://yacy.net/docs/) to learn what YaCy does and why it might be useful to you.
+
+## Prerequisites
+
+### Open ports
+
+You may need to open the following ports on your server:
+
+- `8090` — port number where the server should bind to
+- `8443` — optional SSL port (HTTPS port) the server should bind to
+
+Docker automatically opens these ports in the server's firewall, so you likely don't need to do anything. If you use another firewall in front of the server, you may need to adjust it.
+
+See the upstream [documentation](https://yacy.net/operation/yacy_conf/#system) to learn more.
 
 ## Adjusting the playbook configuration
 
@@ -35,7 +50,7 @@ To enable YaCy with this role, add the following configuration to your `vars.yml
 ```yaml
 ########################################################################
 #                                                                      #
-# yacy                                                    #
+# yacy                                                                 #
 #                                                                      #
 ########################################################################
 
@@ -43,7 +58,7 @@ yacy_enabled: true
 
 ########################################################################
 #                                                                      #
-# /yacy                                                   #
+# /yacy                                                                #
 #                                                                      #
 ########################################################################
 ```
@@ -66,7 +81,10 @@ Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `yacy_environment_variables_additional_variables` variable
 
-See its [`docker-compose.example.yml`](https://yacy.net/blob/main/docker-compose.example.yml) for a complete list of YaCy's config options that you could put in `yacy_environment_variables_additional_variables`.
+See [`yacy.init`](https://github.com/yacy/yacy_search_server/blob/master/defaults/yacy.init) for a complete list of YaCy's config options that you could put in `yacy_environment_variables_additional_variables`.
+
+>[!NOTE]
+> You can check [this section on the documentation](https://yacy.net/download_installation/#configuration-with-environment-variables) for the conversion rule of settings into environment variables. Note that not all settings are available as environment variables.
 
 ## Installing
 
@@ -82,11 +100,11 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, YaCy becomes available at the specified hostname like `https://example.com`.
 
-[Libredirect](https://libredirect.github.io/), an extension for Firefox and Chromium-based desktop browsers, has support for redirections to YaCy. See [this section](https://yacy.net/blob/main/README.md#how-to-make-stack-overflow-links-take-you-to-yacy-automatically) on the official documentation for more information.
-
-If you would like to make your instance public so that it can be used by anyone including Libredirect, please consider to send a PR to the [upstream project](https://yacy.net) to add yours to [`instances.json`](https://yacy.net/blob/main/instances.json), which Libredirect automatically fetches using a script (see [this FAQ entry](https://libredirect.github.io/faq.html#where_the_hell_are_those_instances_coming_from)).
+**Do not forget to change the default login credential of the admin account** (username: `admin`, password: `yacy`) at `https://example.com/ConfigAccounts_p.html`.
 
 ## Troubleshooting
+
+[The official documentation](https://yacy.net/docs/) and [FAQ](https://yacy.net/faq/) are available for troubleshooting.
 
 ### Check the service's logs
 
