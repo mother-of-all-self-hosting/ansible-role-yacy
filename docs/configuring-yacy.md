@@ -100,13 +100,22 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, YaCy becomes available at the specified hostname like `https://example.com`.
 
-**Do not forget to change the default login credential of the admin account** (username: `admin`, password: `yacy`) at `https://example.com/ConfigAccounts_p.html`.
+### Change admin user password
+
+**Do not forget to change the default login credential of the admin account** (username: `admin`, password: `yacy`). You can change it at `https://example.com/ConfigAccounts_p.html`. Alternatively, set a password of the `admin` user to the `yacy_conf_password` variable and run the installation command of your playbook as below:
+
+```sh
+ansible-playbook -i inventory/hosts setup.yml --tags=ensure-yacy-admin-password
+```
+
+>[!NOTE]
+> The password cannot be changed with the playbook's tag if YaCy instance is not running.
 
 ### Change the search mode
 
 Since the password of the default admin account is [hardcoded](https://github.com/yacy/yacy_search_server/blob/master/docker/Dockerfile.alpine), the YaCy instance is set to **the intranet search mode** by default for safety, so that it does not broadcast its existence to peers before you change the login credential.
 
-After you have changed it, you can change the search mode to another one such as "Community-based web search" (global index search mode on the P2P network) from the UI directly at `https://example.com/ConfigBasic.html` or by adding the following configuration to your `vars.yml` file:
+After you have changed the password on the UI or by running the playbook with `ensure-yacy-reset-password` tag, you can change the search mode to another one such as "Community-based web search" (global index search mode on the P2P network) from the UI directly at `https://example.com/ConfigBasic.html` or by adding the following configuration to your `vars.yml` file:
 
 ```yaml
 yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freeworld.unit"

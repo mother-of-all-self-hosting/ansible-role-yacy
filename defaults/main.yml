@@ -15,7 +15,7 @@ yacy_identifier: yacy
 yacy_base_path: "/{{ yacy_identifier }}"
 yacy_data_path: "{{ yacy_base_path }}/data"
 
-yacy_version: latest-alpine
+yacy_version: latest
 
 yacy_uid: ''
 yacy_gid: ''
@@ -42,7 +42,7 @@ yacy_container_image_self_build_repo: "https://github.com/yacy/yacy_search_serve
 yacy_container_image_self_build_repo_version: "master"
 yacy_container_image_self_build_src_files_path: "{{ yacy_base_path }}/docker-src"
 yacy_container_image_self_build_repo_dockerfile_dir: "{{ yacy_container_image_self_build_src_files_path }}/docker"
-yacy_container_image_self_build_repo_dockerfile: "Dockerfile.alpine"
+yacy_container_image_self_build_repo_dockerfile: "Dockerfile"
 
 # Controls whether the container exposes its HTTP port (tcp/8090 in the container).
 #
@@ -173,6 +173,9 @@ yacy_systemd_required_services_list_custom: []
 
 # List of systemd services that the YaCy systemd service wants
 yacy_systemd_wanted_services_list: []
+
+# Specify the admin password
+yacy_conf_password: ''
 
 # Control if UPnP is enabled
 yacy_environment_variables_upnp_enabled: false
