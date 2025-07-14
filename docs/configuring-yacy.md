@@ -113,7 +113,7 @@ ansible-playbook -i inventory/hosts setup.yml --tags=ensure-yacy-admin-password
 
 ### Change the search mode
 
-Since the password of the default admin account is [hardcoded](https://github.com/yacy/yacy_search_server/blob/master/docker/Dockerfile.alpine), the YaCy instance is set to **the intranet search mode** by default for safety, so that it does not broadcast its existence to peers before you change the login credential.
+Since the password of the default admin account is [hardcoded](https://github.com/yacy/yacy_search_server/blob/master/docker/Dockerfile), the YaCy instance is set to **the intranet search mode** by default for safety, so that it does not broadcast its existence to peers before you change the login credential.
 
 After you have changed the password on the UI or by running the playbook with `ensure-yacy-reset-password` tag, you can change the search mode to another one such as "Community-based web search" (global index search mode on the P2P network) from the UI directly at `https://example.com/ConfigBasic.html` or by adding the following configuration to your `vars.yml` file:
 
