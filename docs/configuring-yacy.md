@@ -102,6 +102,22 @@ After running the command for installation, YaCy becomes available at the specif
 
 **Do not forget to change the default login credential of the admin account** (username: `admin`, password: `yacy`) at `https://example.com/ConfigAccounts_p.html`.
 
+### Change the search mode
+
+Since the password of the default admin account is [hardcoded](https://github.com/yacy/yacy_search_server/blob/master/docker/Dockerfile.alpine), the YaCy instance is set to **the intranet search mode** by default for safety, so that it does not broadcast its existence to peers before you change the login credential.
+
+After you have changed it, you can change the search mode to another one such as "Community-based web search" (global index search mode on the P2P network) from the UI directly at `https://example.com/ConfigBasic.html` or by adding the following configuration to your `vars.yml` file:
+
+```yaml
+yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freeworld.unit"
+```
+
+### Password-protect the instance
+
+By default any page without the `_p` suffix on YaCy instance is accessible to anyone, whether the instance is broadcasted or not over the P2P network, while executing administrative tasks such as changing configuration requires logging in to the instance.
+
+To require authorization with a password for accessing the instance, you can set `adminAccountAllPages` to `false` at `https://example.com/ConfigProperties_p.html`. It is also possible to configure it on the "Access Rules" section at `https://example.com/ConfigAccounts_p.html`.
+
 ## Troubleshooting
 
 [The official documentation](https://yacy.net/docs/) and [FAQ](https://yacy.net/faq/) are available for troubleshooting.

@@ -182,8 +182,9 @@ yacy_environment_variables_upnp_enabled: false
 yacy_environment_variables_referrer_meta_policy: origin-when-cross-origin
 
 # Specify network definition
+# See: https://yacy.net/operation/network-definition/
 # Valid values: defaults/yacy.network.freeworld.unit, defaults/yacy.network.webportal.unit, defaults/yacy.network.intranet.unit
-yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freeworld.unit"
+yacy_environment_variables_network_unit_definition: "defaults/yacy.network.intranet.unit"
 
 # Control if HTTPS is preferred for in-protocol operations when available on remote peers
 yacy_environment_variables_network_unit_protocol_https_preferred: true
