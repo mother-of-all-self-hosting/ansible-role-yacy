@@ -121,6 +121,9 @@ After you have changed the password on the UI or by running the playbook with `e
 yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freeworld.unit"
 ```
 
+>[!WARNING]
+> Search mode setting changed on the UI is temporary and reset to the mode specified on the configuration file. Set the configuration to your `vars.yml` file to make the setting persistent.
+
 ### Password-protect the instance
 
 By default any page without the `_p` suffix on YaCy instance is accessible to anyone, whether the instance is broadcasted or not over the P2P network, while executing administrative tasks such as changing configuration requires logging in to the instance.
