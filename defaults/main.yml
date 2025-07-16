@@ -225,9 +225,6 @@ yacy_environment_variables_debug_search_remote_solr_off: false
 yacy_environment_variables_debug_search_remote_solr_testlocal: false
 yacy_environment_variables_debug_snippets_statistics_enabled: false # Set to true to enable computation of statistics on text snippets processing
 
-# Specify the maximum size of the memory allocation pool for the Java Virtual Machine (JVM) of YaCy
-yacy_environment_variables_javastart_xmx: Xmx600m
-
 # Specify maximum size of indexing queue
 yacy_environment_variables_indexer_slots: 100
 
