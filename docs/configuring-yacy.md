@@ -122,7 +122,7 @@ yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freew
 ```
 
 >[!WARNING]
-> Search mode setting changed on the UI is temporary and reset to the mode specified on the configuration file. Set the configuration to your `vars.yml` file to make the setting persistent.
+> Search mode setting changed on the UI is temporary and reset to the mode specified on the configuration file after re-running the playbook. Set the configuration to your `vars.yml` file to make the setting persistent.
 
 ### Password-protect the instance
 
