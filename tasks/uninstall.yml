@@ -24,7 +24,7 @@
         path: "{{ devture_systemd_docker_base_systemd_path }}/{{ yacy_identifier }}.service"
         state: absent
 
-    - name: Ensure Yacy support files do not exist
+    - name: Ensure YaCy support files do not exist
       ansible.builtin.file:
         path: "{{ yacy_base_path }}/{{ item }}"
         state: absent
@@ -47,13 +47,13 @@
       register: network_deletion_result
       changed_when: yacy_container_network in network_deletion_result.stdout
 
-- name: Check existence of Yacy local data path
+- name: Check existence of YaCy local data path
   ansible.builtin.stat:
     path: "{{ yacy_data_path }}"
   register: yacy_data_path_stat
 
 # We just want to notify the user. Deleting data is too destructive.
-- name: Notify if Yacy local data remains
+- name: Notify if YaCy local data remains
   when: yacy_data_path_stat.stat.exists | bool
   ansible.builtin.set_fact:
     devture_playbook_runtime_messages_list: |
@@ -61,6 +61,6 @@
         devture_playbook_runtime_messages_list | default([])
         +
         [
-          "Note: As a local Yacy instance has been removed, some old data remains in `{{ yacy_data_path }}`. Feel free to delete it."
+          "Note: As a local YaCy instance has been removed, some old data remains in `{{ yacy_data_path }}`. Feel free to delete it."
         ]
       }}
