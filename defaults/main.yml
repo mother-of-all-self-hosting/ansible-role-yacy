@@ -92,6 +92,12 @@ yacy_container_labels_traefik_entrypoints: web-secure
 yacy_container_labels_traefik_tls: "{{ yacy_container_labels_traefik_entrypoints != 'web' }}"
 yacy_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 
+# Controls which additional headers to attach to all HTTP requests.
+# To add your own custom request headers, use `yacy_container_labels_traefik_additional_request_headers_custom`
+yacy_container_labels_traefik_additional_request_headers: "{{ yacy_container_labels_traefik_additional_request_headers_auto | combine(yacy_container_labels_traefik_additional_request_headers_custom) }}"
+yacy_container_labels_traefik_additional_request_headers_auto: {}
+yacy_container_labels_traefik_additional_request_headers_custom: {}
+
 # Controls which additional headers to attach to all HTTP responses.
 # To add your own custom response headers, use `yacy_container_labels_traefik_additional_response_headers_custom`
 yacy_container_labels_traefik_additional_response_headers: "{{ yacy_container_labels_traefik_additional_response_headers_auto | combine(yacy_container_labels_traefik_additional_response_headers_custom) }}"

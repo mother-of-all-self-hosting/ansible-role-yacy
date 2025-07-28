@@ -25,11 +25,18 @@ traefik.http.middlewares.{{ yacy_identifier }}-strip-prefix.stripprefix.prefixes
 {% set middlewares = middlewares + [yacy_identifier + '-strip-prefix'] %}
 {% endif %}
 
+{% if yacy_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in yacy_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ yacy_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [yacy_identifier + '-add-request-headers'] %}
+{% endif %}
+
 {% if yacy_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
 {% for name, value in yacy_container_labels_traefik_additional_response_headers.items() %}
-traefik.http.middlewares.{{ yacy_identifier }}-add-headers.headers.customresponseheaders.{{ name }}={{ value }}
+traefik.http.middlewares.{{ yacy_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
 {% endfor %}
-{% set middlewares = middlewares + [yacy_identifier + '-add-headers'] %}
+{% set middlewares = middlewares + [yacy_identifier + '-add-response-headers'] %}
 {% endif %}
 
 traefik.http.routers.{{ yacy_identifier }}.rule={{ yacy_container_labels_traefik_rule }}
