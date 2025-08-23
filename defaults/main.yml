@@ -180,7 +180,10 @@ yacy_systemd_required_services_list_auto: []
 yacy_systemd_required_services_list_custom: []
 
 # List of systemd services that the YaCy systemd service wants
-yacy_systemd_wanted_services_list: []
+yacy_systemd_wanted_services_list: "{{ yacy_systemd_wanted_services_list_default + yacy_systemd_wanted_services_list_auto + yacy_systemd_wanted_services_list_custom }}"
+yacy_systemd_wanted_services_list_default: []
+yacy_systemd_wanted_services_list_auto: []
+yacy_systemd_wanted_services_list_custom: []
 
 # Specify the admin password
 yacy_conf_password: ''
