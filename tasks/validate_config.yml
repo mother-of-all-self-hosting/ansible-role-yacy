@@ -16,6 +16,30 @@
     - yacy_path_prefix
     - yacy_container_network
 
+- name: Fail if YaCy network definition is invalid
+  ansible.builtin.fail:
+    msg: >-
+      yacy_environment_variables_network_unit_definition must be 'defaults/yacy.network.freeworld.unit', 'defaults/yacy.network.webportal.unit', or 'defaults/yacy.network.intranet.unit'
+  when: "yacy_environment_variables_network_unit_definition not in ['defaults/yacy.network.freeworld.unit', 'defaults/yacy.network.webportal.unit', 'defaults/yacy.network.intranet.unit']"
+
+- name: Fail if YaCy restart process is invalid
+  ansible.builtin.fail:
+    msg: >-
+      yacy_environment_variables_restart_process must be 'off' or 'time'
+  when: "yacy_environment_variables_restart_process not in ['off', 'time']"
+
+- name: Fail if YaCy href target attribute is invalid
+  ansible.builtin.fail:
+    msg: >-
+      yacy_environment_variables_search_target must be '_blank', '_self', '_parent', '_top', or 'searchresult'
+  when: "yacy_environment_variables_search_target not in ['_blank', '_self', '_parent', '_top', 'searchresult']"
+
+- name: Fail if YaCy href target special attribute is invalid
+  ansible.builtin.fail:
+    msg: >-
+      yacy_environment_variables_search_target_special must be '_blank', '_self', '_parent', '_top', or 'searchresult'
+  when: "yacy_environment_variables_search_target_special not in ['_blank', '_self', '_parent', '_top', 'searchresult']"
+
 - name: Run if Traefik is enabled
   when: yacy_container_labels_traefik_enabled | bool
   block:
