@@ -37,6 +37,18 @@
         path: "{{ yacy_container_image_self_build_src_files_path }}"
         state: absent
 
+    - name: Ensure YaCy local data path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ yacy_data_path }}"
+      register: yacy_data_path_deletion_result
+      changed_when: yacy_data_path_deletion_result.rc == 0
+
+    - name: Ensure YaCy base path does not exist if empty
+      ansible.builtin.command:
+        cmd: "rmdir {{ yacy_base_path }}"
+      register: yacy_base_path_deletion_result
+      changed_when: yacy_base_path_deletion_result.rc == 0
+
     - name: Ensure YaCy container network does not exist via community.docker.docker_network
       when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
       community.docker.docker_network:
