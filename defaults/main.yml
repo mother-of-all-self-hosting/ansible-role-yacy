@@ -17,13 +17,13 @@ yacy_data_path: "{{ yacy_base_path }}/data"
 
 yacy_version: latest
 
-yacy_uid: ''
-yacy_gid: ''
+yacy_uid: ""
+yacy_gid: ""
 
 yacy_scheme: https
 
 # The hostname at which YaCy is served.
-yacy_hostname: ''
+yacy_hostname: ""
 
 # The path at which YaCy is exposed.
 # This value must either be `/` or not end with a slash (e.g. `/yacy`).
@@ -121,7 +121,7 @@ yacy_container_labels_traefik_additional_response_headers_custom: {}
 # yacy_container_labels_additional_labels: |
 #   my.label=1
 #   another.label="here"
-yacy_container_labels_additional_labels: ''
+yacy_container_labels_additional_labels: ""
 
 # A list of extra arguments to pass to the container (`docker run` command)
 yacy_container_extra_arguments: []
@@ -186,7 +186,7 @@ yacy_systemd_wanted_services_list_auto: []
 yacy_systemd_wanted_services_list_custom: []
 
 # Specify the admin password
-yacy_conf_password: ''
+yacy_conf_password: ""
 
 # Control if UPnP is enabled
 yacy_environment_variables_upnp_enabled: false
@@ -259,7 +259,7 @@ yacy_environment_variables_search_items: 10
 # Valid values: _blank, _self, _parent, _top, "searchresult" (a default custom page name for search results)
 yacy_environment_variables_search_target: _self
 yacy_environment_variables_search_target_special: _self
-yacy_environment_variables_search_target_special_pattern: ''
+yacy_environment_variables_search_target_special_pattern: ""
 
 # Control if yacy_environment_variables_referrer_meta_policy value is overridden and the standard noreferrer link type to search results links is added
 yacy_environment_variables_search_result_noreferrer: true
@@ -343,11 +343,11 @@ yacy_environment_variables_resource_disk_used_max_overshot: 4194304
 
 # Specify the headline and body on an about box on search results
 # yacy_environment_variables_about_headline is effective only if yacy_environment_variables_about_body is specified
-yacy_environment_variables_about_headline: ''
-yacy_environment_variables_about_body: ''
+yacy_environment_variables_about_headline: ""
+yacy_environment_variables_about_body: ""
 
-yacy_environment_variables_donation_iframesource: ''
-yacy_environment_variables_donation_iframetarget: ''
+yacy_environment_variables_donation_iframesource: ""
+yacy_environment_variables_donation_iframetarget: ""
 
 # Specify heuristic configuration
 yacy_environment_variables_heuristic_site: false
@@ -356,4 +356,4 @@ yacy_environment_variables_heuristic_searchresults_crawlglobal: false
 yacy_environment_variables_heuristic_opensearch: false
 
 # Additional environment variables.
-yacy_environment_variables_additional_variables: ''
+yacy_environment_variables_additional_variables: ""
