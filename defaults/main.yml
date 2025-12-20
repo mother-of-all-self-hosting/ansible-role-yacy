@@ -188,6 +188,9 @@ yacy_systemd_wanted_services_list_custom: []
 # Specify the admin password
 yacy_conf_password: ""
 
+# Specify the timezone
+yacy_environment_variables_tz: UTC
+
 # Control if UPnP is enabled
 yacy_environment_variables_upnp_enabled: false
 
