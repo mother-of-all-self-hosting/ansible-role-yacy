@@ -25,7 +25,7 @@ yacy_scheme: https
 # The hostname at which YaCy is served.
 yacy_hostname: ""
 
-# The path at which YaCy is exposed.
+# The path at which YaCy is served.
 # This value must either be `/` or not end with a slash (e.g. `/yacy`).
 yacy_path_prefix: /
 
