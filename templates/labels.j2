@@ -56,4 +56,6 @@ traefik.http.routers.{{ yacy_identifier }}.tls.certResolver={{ yacy_container_la
 traefik.http.services.{{ yacy_identifier }}.loadbalancer.server.port={{ yacy_container_http_port }}
 {% endif %}
 
-{{ yacy_container_labels_additional_labels }}
+{% for arg in yacy_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}
