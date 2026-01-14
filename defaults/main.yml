@@ -20,6 +20,7 @@ yacy_version: latest
 yacy_uid: ""
 yacy_gid: ""
 
+# The scheme used for serving YaCy.
 yacy_scheme: https
 
 # The hostname at which YaCy is served.
