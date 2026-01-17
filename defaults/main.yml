@@ -50,7 +50,7 @@ yacy_container_image_self_build_repo_dockerfile: "Dockerfile"
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 yacy_container_http_host_bind_port: 8090
 
-# Controls whether the container exposes its HTTP port (tcp/8443 in the container).
+# Controls whether the container exposes its HTTPS port (tcp/8443 in the container).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 yacy_container_https_host_bind_port: 8443
