@@ -48,12 +48,12 @@ yacy_container_image_self_build_repo_dockerfile: "Dockerfile"
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 yacy_container_network: "{{ yacy_identifier }}"
 
-# Controls whether the container exposes its HTTP port (tcp/8090 in the container).
+# Specify how the container publishes its HTTP port (as defined by `yacy_container_http_port`).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 yacy_container_http_host_bind_port: 8090
 
-# Controls whether the container exposes its HTTPS port (tcp/8443 in the container).
+# Specify how the container publishes its HTTPS port (as defined by `yacy_container_https_port`).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 yacy_container_https_host_bind_port: 8443
