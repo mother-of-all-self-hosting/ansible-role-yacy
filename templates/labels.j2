@@ -1,6 +1,6 @@
 {#
 SPDX-FileCopyrightText: 2023 Slavi Pantaleev
-SPDX-FileCopyrightText: 2025 Suguru Hirahara
+SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 
 SPDX-License-Identifier: AGPL-3.0-or-later
 #}
@@ -13,6 +13,11 @@ traefik.docker.network={{ yacy_container_labels_traefik_docker_network }}
 {% endif %}
 
 {% set middlewares = [] %}
+
+{% if yacy_container_labels_traefik_middleware_basic_auth_enabled %}
+{% set middlewares = middlewares + [yacy_identifier + '-basic-auth'] %}
+traefik.http.middlewares.{{ yacy_identifier }}-basic-auth.basicauth.users={{ yacy_container_labels_traefik_middleware_basic_auth_users }}
+{% endif %}
 
 {% if yacy_container_labels_traefik_path_prefix != '/' %}
 traefik.http.middlewares.{{ yacy_identifier }}-slashless-redirect.redirectregex.regex=^({{ yacy_container_labels_traefik_path_prefix | quote }})$

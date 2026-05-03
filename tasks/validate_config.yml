@@ -1,5 +1,5 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
-# SPDX-FileCopyrightText: 2025 Suguru Hirahara
+# SPDX-FileCopyrightText: 2025, 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -16,14 +16,15 @@
 - name: Fail if required YaCy settings not defined
   ansible.builtin.fail:
     msg: >-
-      You need to define a required configuration setting (`{{ item }}`).
-  when: "lookup('vars', item, default='') | string | length == 0"
+      You need to define a required configuration setting (`{{ item.name }}`).
+  when: "item.when | bool and lookup('vars', item.name, default='') | string | length == 0"
   with_items:
-    - yacy_uid
-    - yacy_gid
-    - yacy_hostname
-    - yacy_path_prefix
-    - yacy_container_network
+    - { "name": "yacy_uid", when: true }
+    - { "name": "yacy_gid", when: true }
+    - { "name": "yacy_hostname", when: true }
+    - { "name": "yacy_path_prefix", when: true }
+    - { "name": "yacy_container_network", when: true }
+    - { "name": "yacy_container_labels_traefik_middleware_basic_auth_users", when: "{{ yacy_container_labels_traefik_middleware_basic_auth_enabled }}" }
 
 - name: Fail if YaCy network definition is invalid
   ansible.builtin.fail:
