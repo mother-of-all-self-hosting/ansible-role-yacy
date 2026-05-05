@@ -35,7 +35,6 @@ yacy_container_image_tag: "{{ yacy_version }}"
 yacy_container_image_registry_prefix: "{{ yacy_container_image_registry_prefix_upstream }}"
 yacy_container_image_registry_prefix_upstream: "{{ yacy_container_image_registry_prefix_upstream_default }}"
 yacy_container_image_registry_prefix_upstream_default: docker.io/
-yacy_container_image_force_pull: "{{ yacy_container_image.endswith(':latest') }}"
 
 yacy_container_image_self_build: false
 yacy_container_image_self_build_name: "yacy/yacy_search_server:{{ yacy_container_image_self_build_repo_version }}"
