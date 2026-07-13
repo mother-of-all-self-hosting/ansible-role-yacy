@@ -21,6 +21,7 @@
   when: yacy_enabled | bool
   tags:
     - ensure-yacy-admin-password
+    - molecule-notest
   block:
     - name: Set YaCy admin user password
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/set_admin_password.yml"
