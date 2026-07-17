@@ -27,6 +27,10 @@ provisioner:
   inventory:
     group_vars:
       all:
+        # Helper variables
+        yacy_debug_service_enabled: false
+
+        # Variables for YaCy
         yacy_uid: 1000
         yacy_gid: 1000
         yacy_hostname: yacy
