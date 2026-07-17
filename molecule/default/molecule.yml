@@ -33,7 +33,8 @@ provisioner:
         # Variables for YaCy
         yacy_uid: 1000
         yacy_gid: 1000
-        yacy_hostname: yacy
+        yacy_scheme: http
+        yacy_hostname: localhost
         yacy_container_labels_traefik_enabled: false
         yacy_container_http_host_bind_port: 8090
   env:
