@@ -63,6 +63,7 @@ prek-install-git-pre-commit-hook: _ensure_mise_tools_installed
         sed -i 's#^PREK=".*"$#PREK="{{ mise_data_dir }}/shims/prek"#' "$hook"
     done
 
+# Internal - ensures var/mise and var/prek directories exist
 _ensure_mise_data_directory:
     @mkdir -p "{{ mise_data_dir }}"
     @mkdir -p "{{ prek_home }}"
