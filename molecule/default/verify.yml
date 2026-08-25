@@ -50,9 +50,12 @@
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: yacy_defaults
 
+    # `--type=container` matters: without it, `docker inspect` falls back to the
+    # container network of the same name when the container is gone, and every
+    # assertion below then fails on a dict that never had a `Config` in it.
     - name: Read the YaCy container the role created
       ansible.builtin.command:
-        cmd: "docker inspect {{ yacy_molecule_container }}"
+        cmd: "docker inspect --type=container {{ yacy_molecule_container }}"
       register: yacy_container_raw
       changed_when: false
 
