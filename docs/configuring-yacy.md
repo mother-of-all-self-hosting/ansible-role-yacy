@@ -39,6 +39,8 @@ You may need to open the following ports on your server:
 
 Docker automatically opens these ports in the server's firewall, so you likely don't need to do anything. If you use another firewall in front of the server, you may need to adjust it.
 
+Which ports get published on the host is controlled by `yacy_container_http_host_bind_port` and `yacy_container_https_host_bind_port` (set either to an empty string to publish nothing, which is what you want when a reverse proxy reaches YaCy over the container network). The ports YaCy listens on inside the container are `yacy_container_http_port` and `yacy_container_https_port`; the role passes them to YaCy as `YACY_PORT` and `YACY_PORT_SSL`, so moving them moves the listener too.
+
 See the upstream [documentation](https://yacy.net/operation/yacy_conf/#system) to learn more.
 
 ## Adjusting the playbook configuration
@@ -102,20 +104,27 @@ After running the command for installation, YaCy becomes available at the specif
 
 ### Change admin user password
 
-**Do not forget to change the default login credential of the admin account** (username: `admin`, password: `yacy`). You can change it at `https://example.com/ConfigAccounts_p.html`. Alternatively, set a password of the `admin` user to the `yacy_conf_password` variable and run the installation command of your playbook as below:
+>[!WARNING]
+> A freshly installed instance is reachable by anyone at the hostname you configured, and its administration interface accepts the password that YaCy's own container image [hardcodes](https://github.com/yacy/yacy_search_server/blob/master/docker/Dockerfile): user `admin`, password `yacy`. Installing this role does **not** change that password. Setting `yacy_conf_password` alone does not change it either — the tasks that apply it only run under the separate `ensure-yacy-admin-password` tag, which is not part of `setup-all` or `install-all`. Until you have run that command (or changed the password in the web interface), whoever finds your hostname can log in as the administrator, reconfigure the peer and start crawls with it.
+
+Set the password of the `admin` user in the `yacy_conf_password` variable and run your playbook as below:
 
 ```sh
 ansible-playbook -i inventory/hosts setup.yml --tags=ensure-yacy-admin-password
 ```
 
+Alternatively, change it in the web interface at `https://example.com/ConfigAccounts_p.html`.
+
 >[!NOTE]
 > The password cannot be changed with the playbook's tag if YaCy instance is not running.
+
+If you would rather not have the instance reachable at all until you have dealt with this, put HTTP Basic authentication in front of it with `yacy_container_labels_traefik_middleware_basic_auth_enabled` and `yacy_container_labels_traefik_middleware_basic_auth_users`, or do not set `yacy_hostname` to a name that resolves publicly.
 
 ### Change the search mode
 
 Since the password of the default admin account is [hardcoded](https://github.com/yacy/yacy_search_server/blob/master/docker/Dockerfile), the YaCy instance is set to **the intranet search mode** by default for safety, so that it does not broadcast its existence to peers before you change the login credential.
 
-After you have changed the password on the UI or by running the playbook with `ensure-yacy-reset-password` tag, you can change the search mode to another one such as "Community-based web search" (global index search mode on the P2P network) from the UI directly at `https://example.com/ConfigBasic.html` or by adding the following configuration to your `vars.yml` file:
+After you have changed the password on the UI or by running the playbook with the `ensure-yacy-admin-password` tag, you can change the search mode to another one such as "Community-based web search" (global index search mode on the P2P network) from the UI directly at `https://example.com/ConfigBasic.html` or by adding the following configuration to your `vars.yml` file:
 
 ```yaml
 yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freeworld.unit"
@@ -128,7 +137,7 @@ yacy_environment_variables_network_unit_definition: "defaults/yacy.network.freew
 
 By default any page without the `_p` suffix on YaCy instance is accessible to anyone, whether the instance is broadcasted or not over the P2P network, while executing administrative tasks such as changing configuration requires logging in to the instance.
 
-To require authorization with a password for accessing the instance, you can set `adminAccountAllPages` to `false` at `https://example.com/ConfigProperties_p.html`. It is also possible to configure it on the "Access Rules" section at `https://example.com/ConfigAccounts_p.html`.
+To require authorization with a password for accessing the instance, you can set `adminAccountAllPages` to `true` at `https://example.com/ConfigProperties_p.html`. It is also possible to configure it on the "Access Rules" section at `https://example.com/ConfigAccounts_p.html`. As YaCy's own `defaults/yacy.init` puts it: "If `adminAccountAllPages` is set to true, then administration rights are needed to access all pages without any exception."
 
 ## Troubleshooting
 
