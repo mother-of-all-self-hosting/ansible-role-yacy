@@ -60,10 +60,13 @@ yacy_container_http_host_bind_port: 8090
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 yacy_container_https_host_bind_port: 8443
 
-# The port number in the container
+# The port number that YaCy binds its HTTP listener to inside the container.
+# It is passed to YaCy itself as `YACY_PORT` (see `../templates/env.j2`), so that the
+# listener, the published port and the Traefik load-balancer label all move together.
 yacy_container_http_port: 8090
 
-# The port number in the container
+# The port number that YaCy binds its HTTPS listener to inside the container.
+# It is passed to YaCy itself as `YACY_PORT_SSL` (see `../templates/env.j2`).
 yacy_container_https_port: 8443
 
 # A list of additional container networks that the container would be connected to.
