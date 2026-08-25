@@ -3,7 +3,7 @@ galaxy_info:
   author: Suguru Hirahara
   company: progressiv
   role_name: yacy
-  namespace: progressiv
+  namespace: mash
   description: YaCy
   platforms:
     - name: Debian
