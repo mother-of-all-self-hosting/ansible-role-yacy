@@ -35,3 +35,9 @@ just prek-install-git-pre-commit-hook
 This role supports [Molecule](https://docs.ansible.com/projects/molecule/), an Ansible testing framework designed for developing and testing Ansible collections, playbooks, and roles.
 
 Refer to [this page](./molecule/README.md) for details about how to utilize it.
+
+### Releases
+
+Tags are cut automatically by [`.github/workflows/autotag.yml`](.github/workflows/autotag.yml), which asks [`bin/compute-next-tag.sh`](bin/compute-next-tag.sh) what the commit that just landed on `main` should be released as. The answer is derived from `defaults/main.yml` and from the tags that already exist, never from a commit message, so it does not matter in which order pull requests are merged. Commits that touch only documentation or CI configuration are not released.
+
+`bin/test-compute-next-tag.sh` exercises that script against throwaway repositories and runs as a prek hook whenever the script or `defaults/main.yml` changes.
