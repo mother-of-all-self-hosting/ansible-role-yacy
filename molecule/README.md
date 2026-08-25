@@ -47,7 +47,11 @@ Currently there is one testing scenario available.
 
 ### `default`
 
-Tests a standard YaCy installation.
+Tests a standard YaCy installation, end to end.
+
+The scenario deliberately configures YaCy away from the values its own container image would have picked (a different HTTP port, a different HTTPS port and a different search result page size), reads back the `DATA/SETTINGS/yacy.conf` that YaCy rewrites from its environment on every start, and compares all three: what the image ships in `defaults/yacy.init`, what the running process reports, and what the scenario asked for. A second container running the same image with none of the role's configuration is kept alongside as a control and must behave like an unconfigured YaCy throughout.
+
+It then exercises the product rather than the deployment: the role's `ensure-yacy-admin-password` tasks replace the administrator password that YaCy's image hardcodes, a busybox web server is started on YaCy's own container network serving a single page containing a word that exists nowhere else, YaCy is asked to crawl it as an authenticated administrator, and the document is then found by searching for that word. Nothing in the scenario touches the public internet or the YaCy peer-to-peer network.
 
 ## Running
 

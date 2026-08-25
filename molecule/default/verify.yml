@@ -1,53 +1,528 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify YaCy systemd service
+- name: Verify YaCy
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    yacy_verify_url: "http://127.0.0.1:{{ yacy_container_http_port }}"
+
+    # The unconfigured control publishes two ports: the one YaCy picks for itself,
+    # and the one the role moves YaCy to. Only the first of them may ever answer.
+    yacy_verify_stock_url: "http://127.0.0.1:{{ yacy_molecule_stock_host_port }}"
+    yacy_verify_stock_role_port_url: "http://127.0.0.1:{{ yacy_molecule_stock_host_role_port }}"
+
+    # YaCy rewrites this file from its environment on every start, so it is the
+    # running process's own view of its configuration rather than anything the role
+    # wrote. It is read from the host side of the bind mount, which means finding it
+    # there is also proof that the mount in the systemd unit works.
+    yacy_verify_conf_path: "{{ yacy_molecule_data_path }}/SETTINGS/yacy.conf"
+
+    # The settings that get compared between what the image ships, what the running
+    # process reports, and what the scenario asked for.
+    yacy_verify_conf_keys_pattern: '^(port|port\.ssl|search\.items|network\.unit\.definition|upnp\.enabled)[[:space:]]*='
+
+    yacy_verify_sidecar_url: "http://{{ yacy_molecule_sidecar_container }}/"
+    yacy_verify_sidecar_title: YaCy Molecule Probe Page
+    yacy_verify_sidecar_html: >-
+      <!doctype html><html><head><title>{{ yacy_verify_sidecar_title }}</title></head><body><h1>{{ yacy_molecule_marker }}</h1><p>{{ yacy_molecule_marker }} probe document</p></body></html>
+
+    # A crawl of a single page on a single host, with the values YaCy's own crawl
+    # start form submits. `crawlingstart` is the button that makes it a start.
+    yacy_verify_crawl_query: >-
+      crawlingMode=url&crawlingURL={{ yacy_verify_sidecar_url | urlencode }}&crawlingDepth=1&range=domain&indexText=on&indexMedia=on&storeHTCache=on&cachePolicy=iffresh&crawlingIfOlderNumber=1&crawlingIfOlderUnit=day&crawlingDomMaxPages=10000&collection=user&crawlingstart=Start+New+Crawl
+
+    yacy_verify_search_query: "resource=local&verify=false&contentdom=text"
+
   tasks:
-    - name: Wait for YaCy service to become active (up to 180s)
-      ansible.builtin.systemd:
+    # Role defaults are not in scope in a verify play, but the version Renovate would
+    # bump lives in them, and so do the settings whose values distinguish a YaCy this
+    # role configured from a YaCy that configured itself. Only leaf literals may be
+    # read out of this - anything Jinja-derived resolves against an empty namespace.
+    - name: Load the YaCy role defaults
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: yacy_defaults
+
+    - name: Read the YaCy container the role created
+      ansible.builtin.command:
+        cmd: "docker inspect {{ yacy_molecule_container }}"
+      register: yacy_container_raw
+      changed_when: false
+
+    - name: Make sense of the YaCy container
+      ansible.builtin.set_fact:
+        yacy_container: "{{ (yacy_container_raw.stdout | from_json)[0] }}"
+
+    # ------------------------------------------------------------------
+    # The image is the one the role's own variables name
+    # ------------------------------------------------------------------
+
+    # `yacy_container_image` is assembled out of Jinja, so a verify play cannot read
+    # it. Rebuilding it from the two leaf literals ties the container that is actually
+    # running to `yacy_version`, which is the line a Renovate bump would edit.
+    - name: Assert the running container came from the image the role's variables name
+      ansible.builtin.assert:
+        that:
+          - >-
+            yacy_container.Config.Image == (
+              yacy_defaults.yacy_container_image_registry_prefix_upstream_default
+              ~ yacy_molecule_image_repository ~ ':' ~ yacy_defaults.yacy_version
+            )
+        fail_msg: >-
+          The running container came from {{ yacy_container.Config.Image }}, but the role's
+          defaults name
+          {{ yacy_defaults.yacy_container_image_registry_prefix_upstream_default }}{{ yacy_molecule_image_repository }}:{{ yacy_defaults.yacy_version }}
+        success_msg: >-
+          The running container came from {{ yacy_container.Config.Image }}, which is what
+          `yacy_version` ({{ yacy_defaults.yacy_version }}) and the registry prefix compose to
+
+    # ------------------------------------------------------------------
+    # The negative control: what this image does with no role involved
+    # ------------------------------------------------------------------
+
+    # YaCy ships its own defaults in defaults/yacy.init and copies whatever it does not
+    # find in the environment from there into its live configuration. Reading that file
+    # out of the image costs a container that only runs `grep`, and it is what makes
+    # every assertion below attributable: a setting the image would have produced
+    # unaided is not evidence about the role.
+    - name: Read the defaults the YaCy image ships with
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --entrypoint=grep
+          - "{{ yacy_container.Config.Image }}"
+          - -E
+          - "{{ yacy_verify_conf_keys_pattern }}"
+          - /opt/yacy_search_server/defaults/yacy.init
+      register: yacy_stock_init_raw
+      changed_when: false
+
+    - name: Make sense of the defaults the YaCy image ships with
+      ansible.builtin.set_fact:
+        yacy_stock_defaults: >-
+          {{
+            dict(
+              yacy_stock_init_raw.stdout_lines
+              | map('regex_replace', '^([^=]+?)[ \t]*=[ \t]*(.*)$', '\1=\2')
+              | map('split', '=')
+              | list
+            )
+          }}
+
+    # An unconfigured YaCy is a perfectly happy YaCy: it answers 200 on `/`, renders a
+    # search page and serves an admin interface. Everything the role does is therefore
+    # invisible unless it is checked against these values specifically.
+    - name: Assert the YaCy image would have configured itself differently
+      ansible.builtin.assert:
+        that:
+          - yacy_stock_defaults['port'] != (yacy_container_http_port | string)
+          - yacy_stock_defaults['port.ssl'] != (yacy_container_https_port | string)
+          - yacy_stock_defaults['search.items'] != (yacy_environment_variables_search_items | string)
+          - yacy_stock_defaults['network.unit.definition'] != yacy_defaults.yacy_environment_variables_network_unit_definition
+          - yacy_stock_defaults['upnp.enabled'] != (yacy_defaults.yacy_environment_variables_upnp_enabled | to_json)
+        fail_msg: >-
+          The YaCy image already ships {{ yacy_stock_defaults }}, which overlaps what this
+          scenario asks for, so finding those values in the running instance would say
+          nothing about the role
+        success_msg: >-
+          Left alone, this image configures itself as {{ yacy_stock_defaults }} - a different
+          port, a different result page size, the public peer-to-peer network and UPnP on -
+          so every one of those values found below is the role's doing
+
+    # The sharper control: the same image, started with none of the role's env file,
+    # mounts or networking. It gets the rest of the verification's runtime to come up,
+    # and is questioned near the end.
+    - name: Start a YaCy with none of the role's configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - -d
+          - "--name={{ yacy_molecule_stock_container }}"
+          - -p
+          - "127.0.0.1:{{ yacy_molecule_stock_host_port }}:{{ yacy_stock_defaults['port'] }}"
+          - -p
+          - "127.0.0.1:{{ yacy_molecule_stock_host_role_port }}:{{ yacy_container_http_port }}"
+          - "{{ yacy_container.Config.Image }}"
+      changed_when: true
+
+    # ------------------------------------------------------------------
+    # The unit is up and YaCy answers where the role put it
+    # ------------------------------------------------------------------
+
+    - name: Wait for the YaCy systemd service to become active (up to 180s)
+      ansible.builtin.systemd_service:
         name: yacy.service
       register: yacy_service
       until: yacy_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
 
-    - name: Assert YaCy service is active
+    - name: Assert the YaCy systemd service is active
       ansible.builtin.assert:
         that: yacy_service.status.ActiveState == 'active'
-        fail_msg: "yacy.service not active ({{ yacy_service.status.ActiveState }})"
+        fail_msg: "yacy.service is not active ({{ yacy_service.status.ActiveState }})"
         success_msg: "yacy.service is active"
 
-    - name: Retrieve YaCy service log for debugging
+    - name: Retrieve the YaCy service log for debugging
       when: yacy_debug_service_enabled | bool
       ansible.builtin.command:
         cmd: journalctl -xeu yacy.service
       changed_when: false
 
-    - name: Wait for YaCy HTTP endpoint to respond (up to 10m)
+    # `active` only says that a `docker start` is running. This is where the JVM has
+    # finished booting - and, because the port is not the one YaCy binds by itself, it
+    # answering at all already depends on the rendered env file having reached it.
+    - name: Wait for YaCy to answer on the port the role configured (up to 8m)
       ansible.builtin.uri:
-        url: "http://localhost:8090/"
-        method: GET
-        status_code: [200, 302]
+        url: "{{ yacy_verify_url }}/"
         follow_redirects: none
-      register: yacy_endpoint
-      until: yacy_endpoint.status in [200, 302]
-      retries: 120
+        status_code: [200]
+      register: yacy_home
+      until: yacy_home.status == 200
+      retries: 96
       delay: 5
 
-    - name: Assert YaCy HTTP endpoint responds
-      ansible.builtin.assert:
-        that: yacy_endpoint.status in [200, 302]
-        fail_msg: "YaCy did not respond as expected ({{ yacy_endpoint.status | default('no response') }})"
-        success_msg: "YaCy responded with {{ yacy_endpoint.status }}"
+    # ------------------------------------------------------------------
+    # Configuration reaches the process, not just the files on disk
+    # ------------------------------------------------------------------
 
-    - name: Show YaCy systemd service status summary
+    - name: Read the configuration YaCy wrote for itself
+      ansible.builtin.command:
+        argv:
+          - grep
+          - -E
+          - "{{ yacy_verify_conf_keys_pattern }}"
+          - "{{ yacy_verify_conf_path }}"
+      register: yacy_live_conf_raw
+      changed_when: false
+
+    - name: Make sense of the configuration YaCy wrote for itself
+      ansible.builtin.set_fact:
+        yacy_live_conf: >-
+          {{
+            dict(
+              yacy_live_conf_raw.stdout_lines
+              | map('regex_replace', '^([^=]+?)[ \t]*=[ \t]*(.*)$', '\1=\2')
+              | map('split', '=')
+              | list
+            )
+          }}
+
+    - name: Assert YaCy is running with the configuration the role rendered
+      ansible.builtin.assert:
+        that:
+          - yacy_live_conf['port'] == (yacy_container_http_port | string)
+          - yacy_live_conf['port.ssl'] == (yacy_container_https_port | string)
+          - yacy_live_conf['search.items'] == (yacy_environment_variables_search_items | string)
+          - yacy_live_conf['network.unit.definition'] == yacy_defaults.yacy_environment_variables_network_unit_definition
+          - yacy_live_conf['upnp.enabled'] == (yacy_defaults.yacy_environment_variables_upnp_enabled | to_json)
+        fail_msg: >-
+          YaCy is running with {{ yacy_live_conf }}, which is not what the role's env file
+          asked for (port {{ yacy_container_http_port }}, port.ssl {{ yacy_container_https_port }},
+          search.items {{ yacy_environment_variables_search_items }},
+          {{ yacy_defaults.yacy_environment_variables_network_unit_definition }},
+          upnp {{ yacy_defaults.yacy_environment_variables_upnp_enabled | to_json }})
+        success_msg: >-
+          YaCy's own live configuration carries {{ yacy_live_conf }}, every value of it
+          rendered by the role rather than shipped by the image
+
+    # The same claim, made by the process over HTTP rather than read off a file it
+    # happens to have written. YaCy reports its configured result page size as the
+    # page size of a search response.
+    - name: Ask YaCy for a search page
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_url }}/yacysearch.json?query={{ yacy_molecule_absent_marker }}&{{ yacy_verify_search_query }}"
+        status_code: [200]
+      register: yacy_empty_search
+
+    - name: Assert YaCy serves search results the size the role configured
+      ansible.builtin.assert:
+        that:
+          - yacy_empty_search.json.channels[0].itemsPerPage == (yacy_environment_variables_search_items | string)
+          - (yacy_empty_search.json.channels[0].totalResults | int) == 0
+        fail_msg: >-
+          YaCy reports a page size of {{ yacy_empty_search.json.channels[0].itemsPerPage }}
+          rather than the configured {{ yacy_environment_variables_search_items }}
+        success_msg: >-
+          YaCy serves search pages of {{ yacy_empty_search.json.channels[0].itemsPerPage }}
+          results, the size `yacy_environment_variables_search_items` asked for, and finds
+          nothing at all for a word that was never published
+
+    # The network unit decides which index directory YaCy uses, and the index lives in
+    # the bind mount. One directory being there and the other not is the role's choice
+    # of network showing up on the host filesystem.
+    - name: Look for the index of the network the role configured
+      ansible.builtin.stat:
+        path: >-
+          {{ yacy_molecule_data_path }}/INDEX/{{
+            yacy_defaults.yacy_environment_variables_network_unit_definition
+            | regex_replace('^defaults/yacy\.network\.(.*)\.unit$', '\1')
+          }}
+      register: yacy_configured_index
+
+    - name: Look for the index of the network the image would have used
+      ansible.builtin.stat:
+        path: >-
+          {{ yacy_molecule_data_path }}/INDEX/{{
+            yacy_stock_defaults['network.unit.definition']
+            | regex_replace('^defaults/yacy\.network\.(.*)\.unit$', '\1')
+          }}
+      register: yacy_stock_index
+
+    - name: Assert YaCy keeps its index in the role's data path, for the role's network
+      ansible.builtin.assert:
+        that:
+          - yacy_configured_index.stat.exists
+          - not yacy_stock_index.stat.exists
+        fail_msg: >-
+          The index directories under {{ yacy_molecule_data_path }}/INDEX do not match the
+          configured network (configured present={{ yacy_configured_index.stat.exists }},
+          stock present={{ yacy_stock_index.stat.exists }})
+        success_msg: >-
+          YaCy's index sits in {{ yacy_configured_index.stat.path }} on the host, and the
+          directory the image's own network would have used does not exist
+
+    # ------------------------------------------------------------------
+    # The administrator password the role sets is the one that works
+    # ------------------------------------------------------------------
+
+    # YaCy's Dockerfile bakes an administrator password hash into the image, and this
+    # role does not replace it during a normal installation - only when the playbook is
+    # run with the `ensure-yacy-admin-password` tag. Asserting that it works here is not
+    # approval of that arrangement; it is what makes the change below meaningful.
+    - name: Ask YaCy for its status with the password the image ships with
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_url }}/api/status_p.xml"
+        url_username: admin
+        url_password: "{{ yacy_molecule_stock_password }}"
+        status_code: [200]
+      register: yacy_stock_password_before
+
+    - name: Set the YaCy administrator password through the role
+      ansible.builtin.include_role:
+        name: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') | basename }}"
+        tasks_from: set_admin_password.yml
+      vars:
+        # Supplied by com.devture.ansible.role.systemd_docker_base during converge,
+        # which is not in scope in a verify play.
+        devture_systemd_docker_base_host_command_docker: /usr/bin/env docker
+        yacy_conf_password: "{{ yacy_molecule_admin_password }}"
+
+    - name: Ask YaCy for its status with the password the image ships with, again
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_url }}/api/status_p.xml"
+        url_username: admin
+        url_password: "{{ yacy_molecule_stock_password }}"
+        status_code: [401]
+      register: yacy_stock_password_after
+
+    - name: Ask YaCy for its status with the password the role set
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_url }}/api/status_p.xml"
+        url_username: admin
+        url_password: "{{ yacy_molecule_admin_password }}"
+        status_code: [200]
+      register: yacy_admin_status
+
+    - name: Assert the role's tasks replaced the administrator password
+      ansible.builtin.assert:
+        that:
+          - yacy_stock_password_before.status == 200
+          - yacy_stock_password_after.status == 401
+          - yacy_admin_status.status == 200
+        fail_msg: >-
+          The administrator password did not change the way it should have: shipped password
+          before={{ yacy_stock_password_before.status }},
+          after={{ yacy_stock_password_after.status }},
+          role's password={{ yacy_admin_status.status }}
+        success_msg: >-
+          The password baked into the image opened the admin API before the role's
+          `ensure-yacy-admin-password` tasks ran and is refused with 401 afterwards, while
+          `yacy_conf_password` is accepted
+
+    # ------------------------------------------------------------------
+    # A crawl and a search: YaCy does the thing it exists to do
+    # ------------------------------------------------------------------
+
+    - name: Remove any leftover sidecar web server
+      ansible.builtin.command:
+        cmd: "docker rm -f {{ yacy_molecule_sidecar_container }}"
+      register: yacy_sidecar_removal
+      changed_when: yacy_sidecar_removal.rc == 0
+      failed_when: false
+
+    - name: Start a sidecar web server on YaCy's container network
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - -d
+          - "--name={{ yacy_molecule_sidecar_container }}"
+          - "--network={{ yacy_molecule_network }}"
+          - "{{ yacy_molecule_sidecar_image }}"
+          - sh
+          - -c
+          - 'mkdir -p /www && printf ''%s'' "$0" > /www/index.html && exec httpd -f -p 80 -h /www'
+          - "{{ yacy_verify_sidecar_html }}"
+      changed_when: true
+
+    - name: Wait for the sidecar web server to serve its page
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - "--network={{ yacy_molecule_network }}"
+          - "{{ yacy_molecule_sidecar_image }}"
+          - wget
+          - -q
+          - -O
+          - "-"
+          - "{{ yacy_verify_sidecar_url }}"
+      register: yacy_sidecar_page
+      until: yacy_molecule_marker in yacy_sidecar_page.stdout
+      retries: 12
+      delay: 5
+      changed_when: false
+
+    - name: Ask YaCy to crawl the sidecar
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_url }}/Crawler_p.html?{{ yacy_verify_crawl_query }}"
+        url_username: admin
+        url_password: "{{ yacy_molecule_admin_password }}"
+        status_code: [200]
+        timeout: 120
+      register: yacy_crawl_start
+
+    # Nothing was in this index a moment ago, so a hit here means YaCy resolved the
+    # sidecar's name on its own container network, fetched the page, parsed it and put
+    # it into the Solr index under the role's data path. It is the whole product doing
+    # its job, without a byte of public internet involved.
+    - name: Wait for YaCy to index the sidecar page (up to 4m)
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_url }}/yacysearch.json?query={{ yacy_molecule_marker }}&{{ yacy_verify_search_query }}"
+        status_code: [200]
+      register: yacy_search
+      until: (yacy_search.json.channels[0].totalResults | int) > 0
+      retries: 48
+      delay: 5
+
+    - name: Assert YaCy found the page it crawled, and only that page
+      ansible.builtin.assert:
+        that:
+          - (yacy_search.json.channels[0].totalResults | int) == 1
+          - yacy_search.json.channels[0]['items'][0]['title'] == yacy_verify_sidecar_title
+          - yacy_search.json.channels[0]['items'][0]['link'] == yacy_verify_sidecar_url
+          - yacy_search.json.channels[0]['items'][0]['host'] == yacy_molecule_sidecar_container
+        fail_msg: >-
+          The search for {{ yacy_molecule_marker }} came back as
+          {{ yacy_search.json.channels[0] | string | truncate(400) }}
+        success_msg: >-
+          YaCy crawled {{ yacy_verify_sidecar_url }} and returns it for
+          {{ yacy_molecule_marker }} as "{{ yacy_search.json.channels[0]['items'][0]['title'] }}",
+          while {{ yacy_molecule_absent_marker }} matched nothing at all
+
+    # ------------------------------------------------------------------
+    # The control, questioned
+    # ------------------------------------------------------------------
+
+    - name: Wait for the unconfigured YaCy to answer on the port it picks for itself (up to 8m)
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_stock_url }}/"
+        follow_redirects: none
+        status_code: [200]
+      register: yacy_stock_home
+      until: yacy_stock_home.status == 200
+      retries: 96
+      delay: 5
+
+    - name: Ask the unconfigured YaCy on the port the role moves YaCy to
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_stock_role_port_url }}/"
+        follow_redirects: none
+        timeout: 10
+      register: yacy_stock_role_port
+      failed_when: false
+
+    - name: Ask the unconfigured YaCy for a search page
+      ansible.builtin.uri:
+        url: "{{ yacy_verify_stock_url }}/yacysearch.json?query={{ yacy_molecule_marker }}&{{ yacy_verify_search_query }}"
+        status_code: [200]
+      register: yacy_stock_search
+
+    - name: Assert the unconfigured YaCy does none of what the role's YaCy does
+      ansible.builtin.assert:
+        that:
+          - yacy_stock_home.status == 200
+          - yacy_stock_role_port.status != 200
+          - yacy_stock_search.json.channels[0].itemsPerPage != (yacy_environment_variables_search_items | string)
+          - (yacy_stock_search.json.channels[0].totalResults | int) == 0
+        fail_msg: >-
+          The unconfigured control did not behave like an unconfigured YaCy:
+          own port={{ yacy_stock_home.status }},
+          role's port={{ yacy_stock_role_port.status }},
+          page size={{ yacy_stock_search.json.channels[0].itemsPerPage }},
+          hits for {{ yacy_molecule_marker }}={{ yacy_stock_search.json.channels[0].totalResults }}
+        success_msg: >-
+          A YaCy with none of the role's configuration serves happily on
+          {{ yacy_stock_defaults['port'] }} (status {{ yacy_stock_home.status }}), refuses
+          {{ yacy_container_http_port }} ({{ yacy_stock_role_port.status }}), pages results
+          {{ yacy_stock_search.json.channels[0].itemsPerPage }} at a time and knows nothing
+          of {{ yacy_molecule_marker }}
+
+    # ------------------------------------------------------------------
+    # Nothing was quietly restarting while all of that was being checked
+    # ------------------------------------------------------------------
+
+    # `Restart=always` means the unit reads `active` while it is crash-looping, which
+    # is exactly what a JVM that cannot write its data path would settle into. The
+    # window starts here, with everything already answering, because restarts from
+    # before this point say nothing.
+    - name: Sample the YaCy restart counter
+      ansible.builtin.systemd_service:
+        name: yacy.service
+      register: yacy_restarts_before
+
+    # Comfortably longer than the unit's `RestartSec=30`, so a crash loop has to tick
+    # at least once inside the window.
+    - name: Watch the YaCy service for 45 seconds
+      ansible.builtin.pause:
+        seconds: 45
+
+    - name: Sample the YaCy restart counter again
+      ansible.builtin.systemd_service:
+        name: yacy.service
+      register: yacy_restarts_after
+
+    - name: Assert YaCy did not restart while it was up
+      ansible.builtin.assert:
+        that: yacy_restarts_after.status.NRestarts == yacy_restarts_before.status.NRestarts
+        fail_msg: >-
+          yacy.service restarted while it was supposedly up
+          ({{ yacy_restarts_before.status.NRestarts }} to
+          {{ yacy_restarts_after.status.NRestarts }}), so `active` was hiding a crash loop
+        success_msg: >-
+          yacy.service did not restart over 45 seconds of watching
+          (restarts so far: {{ yacy_restarts_after.status.NRestarts }})
+
+    - name: Show the YaCy verification summary
       ansible.builtin.debug:
         msg:
-          - "YaCy systemd: {{ yacy_service.status.ActiveState }}"
-          - "YaCy HTTP: {{ yacy_endpoint.status }}"
+          - "systemd: {{ yacy_service.status.ActiveState }}, restarts {{ yacy_restarts_after.status.NRestarts }}"
+          - "image: {{ yacy_container.Config.Image }}"
+          - "image defaults: {{ yacy_stock_defaults }}"
+          - "live configuration: {{ yacy_live_conf }}"
+          - "home page: {{ yacy_home.status }} on port {{ yacy_container_http_port }}"
+          - "admin password: shipped {{ yacy_stock_password_before.status }} then {{ yacy_stock_password_after.status }}, role's {{ yacy_admin_status.status }}"
+          - "crawl: {{ yacy_crawl_start.status }}, indexed {{ yacy_search.json.channels[0].totalResults }} document(s) from {{ yacy_verify_sidecar_url }}"
+          - "unconfigured control: {{ yacy_stock_home.status }} on {{ yacy_stock_defaults['port'] }}, {{ yacy_stock_role_port.status }} on {{ yacy_container_http_port }}"

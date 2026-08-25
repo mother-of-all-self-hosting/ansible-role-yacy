@@ -1,3 +1,4 @@
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 # SPDX-FileCopyrightText: 2026 spatterlight
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
 #
@@ -31,13 +32,65 @@ provisioner:
         # Helper variables
         yacy_debug_service_enabled: false
 
+        # The container, network and paths the role derives from its identifier.
+        # Role defaults are not in scope in a verify play, so they are spelled out.
+        yacy_molecule_container: yacy
+        yacy_molecule_network: yacy
+        yacy_molecule_data_path: /yacy/data
+
+        # The image repository the role installs from. The role composes the full
+        # reference out of Jinja, which a verify play cannot resolve, so the constant
+        # half lives here and gets joined with the `yacy_version` literal that
+        # Renovate would bump.
+        yacy_molecule_image_repository: yacy/yacy_search_server
+
+        # A throwaway static web server that the crawl probe points YaCy at. It lives
+        # on YaCy's own container network because Docker 28 and newer block traffic
+        # from a container to a host-published port over the bridge gateway, and
+        # because a probe that crawled the public internet would be testing the
+        # internet rather than this role. Both names carry the role and the scenario,
+        # like the platform does, so a leftover container can never collide with
+        # another scenario running in parallel.
+        yacy_molecule_sidecar_container: yacy-molecule-default-sidecar
+        yacy_molecule_stock_container: yacy-molecule-default-stock-control
+        yacy_molecule_sidecar_image: docker.io/library/busybox:latest
+
+        # The word that exists only on the sidecar page. Finding it in YaCy's index
+        # means YaCy fetched and parsed that page. The second word is never published
+        # anywhere, and searching for it is what proves the search discriminates.
+        yacy_molecule_marker: yacymoleculecrawlmarker
+        yacy_molecule_absent_marker: yacymoleculeneverpublished
+
+        # The administrator password the image ships with, hardcoded in YaCy's own
+        # Dockerfile, and the one the role's `ensure-yacy-admin-password` tasks
+        # replace it with.
+        yacy_molecule_stock_password: yacy
+        yacy_molecule_admin_password: molecule-admin-password
+
+        # Ports the stock-image control publishes on the host side of the platform
+        # container: one for the port YaCy binds by itself, one for the port the role
+        # moves it to. Neither may collide with the role's own published port.
+        yacy_molecule_stock_host_port: 8190
+        yacy_molecule_stock_host_role_port: 8195
+
         # Variables for YaCy
         yacy_uid: 1000
         yacy_gid: 1000
         yacy_scheme: http
         yacy_hostname: localhost
         yacy_container_labels_traefik_enabled: false
-        yacy_container_http_host_bind_port: 8090
+
+        # Deliberately not the 8090/8443 that YaCy's own defaults/yacy.init carries.
+        # These reach the process only as YACY_PORT / YACY_PORT_SSL in the rendered
+        # env file, so a YaCy answering on 8095 is evidence that the file arrived.
+        yacy_container_http_port: 8095
+        yacy_container_https_port: 8543
+        yacy_container_http_host_bind_port: 127.0.0.1:8095
+        yacy_container_https_host_bind_port: ""
+
+        # Deliberately not the 10 that YaCy's own defaults/yacy.init carries. YaCy
+        # reports it back over HTTP as the search result page size.
+        yacy_environment_variables_search_items: 23
   env:
     # Workaround for https://github.com/ansible/molecule/issues/4391
     ANSIBLE_ROLES_PATH: ${MOLECULE_PROJECT_DIRECTORY}/..:/.ansible/roles:/usr/share/ansible/roles:/etc/ansible/roles:~/.ansible/roles
