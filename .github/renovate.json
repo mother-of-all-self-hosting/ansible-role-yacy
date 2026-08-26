@@ -7,6 +7,6 @@
     "Everything else Renovate manages here (GitHub Actions, prek hooks, mise tools, the Molecule pip requirements, the Ansible roles and collections, .python-version) is covered by the shared preset and keeps automerging on a branch."
   ],
   "extends": [
-    "github>mother-of-all-self-hosting/renovate-config#v1.0.0"
+    "github>mother-of-all-self-hosting/renovate-config#v1.1.0"
   ]
 }
