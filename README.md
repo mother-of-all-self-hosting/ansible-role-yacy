@@ -38,6 +38,6 @@ Refer to [this page](./molecule/README.md) for details about how to utilize it.
 
 ### Releases
 
-Tags are cut automatically by [`.github/workflows/autotag.yml`](.github/workflows/autotag.yml), which asks [`bin/compute-next-tag.sh`](bin/compute-next-tag.sh) what the commit that just landed on `main` should be released as. The answer is derived from `defaults/main.yml` and from the tags that already exist, never from a commit message, so it does not matter in which order pull requests are merged. Commits that touch only documentation or CI configuration are not released.
+Tags are created by [`.github/workflows/autotag.yml`](.github/workflows/autotag.yml), which asks [`bin/compute-next-tag.sh`](bin/compute-next-tag.sh) what the commit on `main` should be released as. The answer comes from the YaCy version pinned in [`defaults/main.yml`](defaults/main.yml) and from the tags that already exist, so a commit that only touches documentation or CI is not released at all, and any change to the role itself is — without waiting for a dependency bump to carry it along.
 
-`bin/test-compute-next-tag.sh` exercises that script against throwaway repositories and runs as a prek hook whenever the script or `defaults/main.yml` changes.
+[`bin/test-compute-next-tag.sh`](bin/test-compute-next-tag.sh) exercises that script against throwaway repositories, and runs as a prek hook. and runs as a pre-commit hook whenever the tagger or `defaults/main.yml` changes.
