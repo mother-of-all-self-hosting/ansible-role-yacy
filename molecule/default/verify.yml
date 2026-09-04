@@ -41,11 +41,10 @@
     yacy_verify_search_query: "resource=local&verify=false&contentdom=text"
 
   tasks:
-    # Role defaults are not in scope in a verify play, but the version Renovate would
-    # bump lives in them, and so do the settings whose values distinguish a YaCy this
-    # role configured from a YaCy that configured itself. Only leaf literals may be
-    # read out of this - anything Jinja-derived resolves against an empty namespace.
-    - name: Load the YaCy role defaults
+    # The role is not included in this playbook, so its defaults are not in
+    # scope. Reading defaults/main.yml directly ties the version assertion
+    # below.
+    - name: Load the role defaults
       ansible.builtin.include_vars:
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: yacy_defaults
