@@ -521,11 +521,11 @@
     - name: Show the YaCy verification summary
       ansible.builtin.debug:
         msg:
-          - "systemd: {{ yacy_service.status.ActiveState }}, restarts {{ yacy_restarts_after.status.NRestarts }}"
-          - "image: {{ yacy_container.Config.Image }}"
-          - "image defaults: {{ yacy_stock_defaults }}"
-          - "live configuration: {{ yacy_live_conf }}"
-          - "home page: {{ yacy_home.status }} on port {{ yacy_container_http_port }}"
-          - "admin password: shipped {{ yacy_stock_password_before.status }} then {{ yacy_stock_password_after.status }}, role's {{ yacy_admin_status.status }}"
-          - "crawl: {{ yacy_crawl_start.status }}, indexed {{ yacy_search.json.channels[0].totalResults }} document(s) from {{ yacy_verify_sidecar_url }}"
-          - "unconfigured control: {{ yacy_stock_home.status }} on {{ yacy_stock_defaults['port'] }}, {{ yacy_stock_role_port.status }} on {{ yacy_container_http_port }}"
+          - "YaCy systemd: {{ yacy_service.status.ActiveState }}, restarts {{ yacy_restarts_after.status.NRestarts }}"
+          - "YaCy image: {{ yacy_container.Config.Image }}"
+          - "YaCy image defaults: {{ yacy_stock_defaults }}"
+          - "YaCy live configuration: {{ yacy_live_conf }}"
+          - "YaCy home page: {{ yacy_home.status }} on port {{ yacy_container_http_port }}"
+          - "YaCy admin password: shipped {{ yacy_stock_password_before.status }} then {{ yacy_stock_password_after.status }}, role's {{ yacy_admin_status.status }}"
+          - "YaCy crawl: {{ yacy_crawl_start.status }}, indexed {{ yacy_search.json.channels[0].totalResults }} document(s) from {{ yacy_verify_sidecar_url }}"
+          - "YaCy unconfigured control: {{ yacy_stock_home.status }} on {{ yacy_stock_defaults['port'] }}, {{ yacy_stock_role_port.status }} on {{ yacy_container_http_port }}"
