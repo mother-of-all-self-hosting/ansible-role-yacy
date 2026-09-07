@@ -52,13 +52,13 @@
     # `--type=container` matters: without it, `docker inspect` falls back to the
     # container network of the same name when the container is gone, and every
     # assertion below then fails on a dict that never had a `Config` in it.
-    - name: Read the YaCy container the role created
+    - name: Inspect YaCy container
       ansible.builtin.command:
         cmd: "docker inspect --type=container {{ yacy_molecule_container }}"
       register: yacy_container_raw
       changed_when: false
 
-    - name: Make sense of the YaCy container
+    - name: Parse the YaCy container definition
       ansible.builtin.set_fact:
         yacy_container: "{{ (yacy_container_raw.stdout | from_json)[0] }}"
 
@@ -108,7 +108,7 @@
       register: yacy_stock_init_raw
       changed_when: false
 
-    - name: Make sense of the defaults the YaCy image ships with
+    - name: Parse the defaults the YaCy image definition ships with
       ansible.builtin.set_fact:
         yacy_stock_defaults: >-
           {{
