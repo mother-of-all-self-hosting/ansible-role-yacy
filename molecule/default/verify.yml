@@ -168,14 +168,20 @@
       until: yacy_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
+      # So that giving up is reported by the assertion below rather than as a
+      # wall of systemd unit properties.
+      failed_when: false
 
+    # `Restart=always` in the systemd unit means that even a container which crashes
+    # and gets restarted reads as active here, so this is a precondition rather than
+    # a result.
     - name: Assert the YaCy systemd service is active
       ansible.builtin.assert:
         that: yacy_service.status.ActiveState == 'active'
         fail_msg: "yacy.service is not active ({{ yacy_service.status.ActiveState }})"
         success_msg: "yacy.service is active"
 
-    - name: Retrieve the YaCy service log for debugging
+    - name: Retrieve the YaCy systemd service log for debugging
       when: yacy_debug_service_enabled | bool
       ansible.builtin.command:
         cmd: journalctl -xeu yacy.service
