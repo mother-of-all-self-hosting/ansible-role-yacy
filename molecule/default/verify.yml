@@ -510,18 +510,18 @@
     - name: Sample the YaCy restart counter again
       ansible.builtin.systemd_service:
         name: yacy.service
-      register: yacy_restarts_after
+      register: yacy_service_after
 
     - name: Assert YaCy did not restart while it was up
       ansible.builtin.assert:
-        that: yacy_restarts_after.status.NRestarts == yacy_restarts_before.status.NRestarts
+        that: yacy_service_after.status.NRestarts == yacy_restarts_before.status.NRestarts
         fail_msg: >-
           yacy.service restarted while it was supposedly up
           ({{ yacy_restarts_before.status.NRestarts }} to
-          {{ yacy_restarts_after.status.NRestarts }}), so `active` was hiding a crash loop
+          {{ yacy_service_after.status.NRestarts }}), so `active` was hiding a crash loop
         success_msg: >-
           yacy.service did not restart over 45 seconds of watching
-          (restarts so far: {{ yacy_restarts_after.status.NRestarts }})
+          (restarts so far: {{ yacy_service_after.status.NRestarts }})
 
     - name: Show the YaCy verification summary
       ansible.builtin.debug:
