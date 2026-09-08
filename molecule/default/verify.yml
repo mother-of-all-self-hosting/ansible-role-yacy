@@ -145,16 +145,12 @@
     # and is questioned near the end.
     - name: Start a YaCy with none of the role's configuration
       ansible.builtin.command:
-        argv:
-          - docker
-          - run
-          - -d
-          - "--name={{ yacy_molecule_stock_container }}"
-          - -p
-          - "127.0.0.1:{{ yacy_molecule_stock_host_port }}:{{ yacy_stock_defaults['port'] }}"
-          - -p
-          - "127.0.0.1:{{ yacy_molecule_stock_host_role_port }}:{{ yacy_container_http_port }}"
-          - "{{ yacy_container.Config.Image }}"
+        cmd: >-
+          docker run -d
+          --name={{ yacy_molecule_stock_container }}
+          -p 127.0.0.1:{{ yacy_molecule_stock_host_port }}:{{ yacy_stock_defaults['port'] }}
+          -p 127.0.0.1:{{ yacy_molecule_stock_host_role_port }}:{{ yacy_container_http_port }}
+          {{ yacy_container.Config.Image }}
       changed_when: true
 
     # ------------------------------------------------------------------
