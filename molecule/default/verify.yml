@@ -526,7 +526,7 @@
     - name: Show the YaCy verification summary
       ansible.builtin.debug:
         msg:
-          - "YaCy systemd: {{ yacy_service.status.ActiveState }}, restarts {{ yacy_restarts_after.status.NRestarts }}"
+          - "YaCy systemd: {{ yacy_service.status.ActiveState }}, {{ yacy_service_after.status.NRestarts }} restart(s)"
           - "YaCy image: {{ yacy_container.Config.Image }}"
           - "YaCy image defaults: {{ yacy_stock_defaults }}"
           - "YaCy live configuration: {{ yacy_live_conf }}"
