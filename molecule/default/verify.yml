@@ -41,6 +41,8 @@
     yacy_verify_search_query: "resource=local&verify=false&contentdom=text"
 
   tasks:
+    - name: Verify that YaCy works
+      block:
     # The role is not included in this playbook, so its defaults are not in
     # scope. Reading defaults/main.yml directly ties the version assertion
     # below.
@@ -530,3 +532,19 @@
           - "YaCy admin password: shipped {{ yacy_stock_password_before.status }} then {{ yacy_stock_password_after.status }}, role's {{ yacy_admin_status.status }}"
           - "YaCy crawl: {{ yacy_crawl_start.status }}, indexed {{ yacy_search.json.channels[0].totalResults }} document(s) from {{ yacy_verify_sidecar_url }}"
           - "YaCy unconfigured control: {{ yacy_stock_home.status }} on {{ yacy_stock_defaults['port'] }}, {{ yacy_stock_role_port.status }} on {{ yacy_container_http_port }}"
+
+      rescue:
+        # Whatever went wrong, the reason is almost always in the systemd service log.
+        - name: Retrieve the YaCy systemd service log
+          ansible.builtin.command:
+            cmd: journalctl --no-pager --output=cat --unit=yacy.service
+          register: yacy_service_log
+          changed_when: false
+
+        - name: Show the YaCy systemd service log
+          ansible.builtin.debug:
+            var: yacy_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "YaCy verification failed. The systemd service log is printed above."
