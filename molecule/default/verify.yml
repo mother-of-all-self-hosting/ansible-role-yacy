@@ -40,6 +40,9 @@
 
     yacy_verify_search_query: "resource=local&verify=false&contentdom=text"
 
+    yacy_verify_units:
+      - yacy.service
+
   tasks:
     - name: Verify that YaCy works
       block:
@@ -159,13 +162,14 @@
         # The unit is up and YaCy answers where the role put it
         # ------------------------------------------------------------------
 
-        - name: Wait for the YaCy systemd service to become active (up to 180s)
+        - name: Wait for the YaCy systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
-            name: yacy.service
-          register: yacy_service
-          until: yacy_service.status.ActiveState == 'active'
+            name: "{{ item }}"
+          register: yacy_services
+          until: yacy_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
+          loop: "{{ yacy_verify_units }}"
           # So that giving up is reported by the assertion below rather than as a
           # wall of systemd unit properties.
           failed_when: false
@@ -173,17 +177,20 @@
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the YaCy systemd service is active
+        - name: Assert the YaCy systemd services are active
           ansible.builtin.assert:
-            that: yacy_service.status.ActiveState == 'active'
-            fail_msg: "yacy.service is not active ({{ yacy_service.status.ActiveState }})"
-            success_msg: "yacy.service is active"
+            that: yacy_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            fail_msg: >-
+              Not every service is active:
+              {{ dict(yacy_verify_units | zip(yacy_services.results | map(attribute='status.ActiveState'))) }}
+            success_msg: "Every systemd service is active"
 
-        - name: Retrieve the YaCy systemd service log for debugging
+        - name: Retrieve the YaCy systemd services log for debugging
           when: yacy_debug_service_enabled | bool
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=yacy.service
+            cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
+          loop: "{{ yacy_verify_units }}"
 
         # `active` only says that a `docker start` is running. This is where the JVM has
         # finished booting - and, because the port is not the one YaCy binds by itself, it
@@ -524,7 +531,7 @@
         - name: Show the YaCy verification summary
           ansible.builtin.debug:
             msg:
-              - "YaCy systemd: {{ yacy_service.status.ActiveState }}, {{ yacy_service_after.status.NRestarts }} restart(s)"
+              - "YaCy systemd: {% for unit, state in yacy_verify_units | zip(yacy_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "YaCy image: {{ yacy_container.Config.Image }}"
               - "YaCy image defaults: {{ yacy_stock_defaults }}"
               - "YaCy live configuration: {{ yacy_live_conf }}"
