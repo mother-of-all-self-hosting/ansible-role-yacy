@@ -31,6 +31,7 @@ provisioner:
       all:
         # Helper variables
         yacy_debug_service_enabled: false
+        yacy_restarts_check_enabled: true
 
         # The container, network and paths the role derives from its identifier.
         # Role defaults are not in scope in a verify play, so they are spelled out.
