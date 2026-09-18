@@ -83,7 +83,7 @@ Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `yacy_environment_variables_additional_variables` variable
 
-See [`yacy.init`](https://github.com/yacy/yacy_search_server/blob/master/defaults/yacy.init) for a complete list of YaCy's config options that you could put in `yacy_environment_variables_additional_variables`.
+See [`yacy.init`](https://github.com/yacy/yacy_search_server/blob/master/defaults/yacy.init) for a complete list of YaCy's config options that you can put in `yacy_environment_variables_additional_variables`.
 
 >[!NOTE]
 > You can check [this section on the documentation](https://yacy.net/download_installation/#configuration-with-environment-variables) for the conversion rule of settings into environment variables. Note that not all settings are available as environment variables.
