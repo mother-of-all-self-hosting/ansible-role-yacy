@@ -140,6 +140,12 @@ yacy_container_extra_arguments: "{{ yacy_container_extra_arguments_auto + yacy_c
 yacy_container_extra_arguments_auto: []
 yacy_container_extra_arguments_custom: []
 
+# A list of extra arguments to pass to the process inside the container
+# Example: ['--SOME_ARGUMENT']
+yacy_process_extra_arguments: "{{ yacy_process_extra_arguments_auto + yacy_process_extra_arguments_custom }}"
+yacy_process_extra_arguments_auto: []
+yacy_process_extra_arguments_custom: []
+
 # Specifies the value of the `X-XSS-Protection` header
 # Stops pages from loading when they detect reflected cross-site scripting (XSS) attacks.
 #
