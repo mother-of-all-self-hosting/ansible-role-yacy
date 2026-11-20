@@ -22,9 +22,6 @@
   with_items:
     - yacy_uid
     - yacy_gid
-    - yacy_hostname
-    - yacy_path_prefix
-    - yacy_container_network
 
 - name: Fail if YaCy network definition is invalid
   ansible.builtin.fail:
