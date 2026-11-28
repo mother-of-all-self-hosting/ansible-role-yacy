@@ -52,7 +52,7 @@
       failed_when: false
 
     - name: Ensure YaCy container network does not exist
-      when: yacy_container_network_deletion_enabled
+      when: yacy_container_network_deletion_enabled and yacy_container_network != 'host'
       block:
         - name: Ensure YaCy container network does not exist via community.docker.docker_network
           when: devture_systemd_docker_base_container_network_creation_method == 'ansible-module'
